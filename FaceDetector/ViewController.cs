@@ -17,8 +17,8 @@ namespace FaceDetector {
 		static AVCaptureSession session;
 		CAShapeLayer shapeLayer = new CAShapeLayer ();
 
-		VNDetectFaceRectanglesRequest faceDetection = new VNDetectFaceRectanglesRequest ();
-		VNDetectFaceLandmarksRequest faceLandmarks = new VNDetectFaceLandmarksRequest ();
+		VNDetectFaceRectanglesRequest faceDetection = new VNDetectFaceRectanglesRequest (null);
+		VNDetectFaceLandmarksRequest faceLandmarks = new VNDetectFaceLandmarksRequest (null);
 		VNSequenceRequestHandler faceLandmarksDetectionRequest = new VNSequenceRequestHandler ();
 		VNSequenceRequestHandler faceDetectionRequest = new VNSequenceRequestHandler ();
 
@@ -125,7 +125,7 @@ namespace FaceDetector {
 		void DetectFace (CIImage image)
 		{
 			faceDetectionRequest.Perform (new VNRequest [] { faceDetection }, image, out var performError);
-			var results = faceDetection.Results.Cast<VNFaceObservation> ().ToArray ();
+			var results = faceDetection.GetResults<VNFaceObservation> () ?? Array.Empty<VNFaceObservation> ();
 			if (results.Length > 0) {
 				faceLandmarks.InputFaceObservations = results;
 				DetectLandmarks (image);
@@ -137,7 +137,7 @@ namespace FaceDetector {
 		void DetectLandmarks (CIImage image)
 		{
 			faceLandmarksDetectionRequest.Perform (new VNRequest [] { faceLandmarks }, image, out var performError);
-			var landmarksResults = faceLandmarks?.Results?.Cast<VNFaceObservation> ()?.ToArray () ?? Array.Empty<VNFaceObservation> ();
+			var landmarksResults = faceLandmarks?.GetResults<VNFaceObservation> () ?? Array.Empty<VNFaceObservation> ();
 			foreach (var observation in landmarksResults) {
 				DispatchQueue.MainQueue.DispatchAsync (() => {
 					var boundingBox = faceLandmarks.InputFaceObservations.FirstOrDefault ()?.BoundingBox;
